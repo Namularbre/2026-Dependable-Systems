@@ -1,0 +1,18 @@
+@model ItemDto
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Catalog</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+    </ol>
+</nav>
+
+<h1>@Model.Name</h1>
+<p class="lead">@Model.Description</p>
+<p class="fs-4 fw-bold">@Model.Price.ToString("C")</p>
+<p class="text-muted">@(Model.Stock > 0 ? $"{Model.Stock} in stock" : "Out of stock")</p>
+
+<partial name="_AddToCart" model="Model"/>

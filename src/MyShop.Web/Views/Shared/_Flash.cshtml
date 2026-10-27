@@ -1,0 +1,7 @@
+@if (TempData[ControllerExtensions.FlashKey] is string message)
+{
+    <div class="alert alert-@(TempData[ControllerExtensions.FlashKindKey] ?? "success") alert-dismissible fade show" role="alert">
+        @message
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

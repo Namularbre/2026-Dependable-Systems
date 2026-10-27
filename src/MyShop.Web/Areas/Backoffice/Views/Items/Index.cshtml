@@ -1,0 +1,62 @@
+@model IReadOnlyList<ItemDto>
+@{
+    ViewData["Title"] = "Backoffice · Items";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Items</h1>
+    <a asp-action="Create" class="btn btn-primary">New item</a>
+</div>
+
+<table class="table align-middle">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th class="text-end">Price</th>
+        <th class="text-end">Stock</th>
+        <th>Status</th>
+        <th style="width: 13rem">Refill</th>
+        <th class="text-end">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">@item.Name</a>
+                <div class="small text-muted">updated @item.UpdatedAt.ToLocalTime().ToString("g")</div>
+            </td>
+            <td class="text-end">@item.Price.ToString("C")</td>
+            <td class="text-end @(item.Stock == 0 ? "text-danger fw-bold" : "")">@item.Stock</td>
+            <td>
+                @if (item.IsPublished)
+                {
+                    <span class="badge text-bg-success">On sale</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-secondary">Hidden</span>
+                }
+            </td>
+            <td>
+                <form asp-action="Refill" asp-route-id="@item.Id" method="post" class="d-flex gap-2">
+                    <input type="number" name="quantity" value="10" min="1" class="form-control form-control-sm" aria-label="Quantity to add"/>
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Refill</button>
+                </form>
+            </td>
+            <td class="text-end">
+                <div class="d-inline-flex gap-2">
+                    <form asp-action="Publish" asp-route-id="@item.Id" method="post">
+                        <input type="hidden" name="published" value="@((!item.IsPublished).ToString())"/>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">@(item.IsPublished ? "Unpublish" : "Put on sale")</button>
+                    </form>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

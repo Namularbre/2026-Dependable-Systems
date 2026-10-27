@@ -1,0 +1,13 @@
+@model ItemDto
+@if (Model.IsAvailable)
+{
+    <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 align-items-center">
+        <input type="hidden" name="itemId" value="@Model.Id"/>
+        <input type="number" name="quantity" value="1" min="1" max="@Math.Min(Model.Stock, 99)" class="form-control form-control-sm" style="width: 4.5rem" aria-label="Quantity"/>
+        <button type="submit" class="btn btn-primary btn-sm">Add to cart</button>
+    </form>
+}
+else
+{
+    <span class="badge text-bg-secondary">Out of stock</span>
+}

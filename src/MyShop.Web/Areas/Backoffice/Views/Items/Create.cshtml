@@ -1,0 +1,41 @@
+@model ItemForm
+@{
+    ViewData["Title"] = "Backoffice · New item";
+}
+
+<h1 class="mb-4">New item</h1>
+
+<form asp-action="Create" method="post" class="col-md-8 col-lg-6">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control"/>
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="row">
+        <div class="col mb-3">
+            <label asp-for="Price" class="form-label"></label>
+            <input asp-for="Price" class="form-control" step="0.01" type="number"/>
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+        <div class="col mb-3">
+            <label asp-for="InitialStock" class="form-label"></label>
+            <input asp-for="InitialStock" class="form-control"/>
+            <span asp-validation-for="InitialStock" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-check mb-3">
+        <input asp-for="Publish" class="form-check-input"/>
+        <label asp-for="Publish" class="form-check-label"></label>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-link">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

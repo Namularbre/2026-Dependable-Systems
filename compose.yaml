@@ -1,0 +1,101 @@
+﻿name: myshop
+
+# ── shared definitions ───────────────────────────────────────────────────────
+x-db-env: &db-env
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: myshop
+  # Nodes authenticate to each other inside the private compose network.
+  POSTGRES_HOST_AUTH_METHOD: trust
+
+x-citus-node: &citus-node
+  image: citusdata/citus:13.0
+  restart: unless-stopped
+  healthcheck:
+    # TCP check: only true once init scripts are done and the real server is listening.
+    test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d myshop"]
+    interval: 3s
+    timeout: 3s
+    retries: 40
+
+x-web-env: &web-env
+  ASPNETCORE_ENVIRONMENT: Production
+  ConnectionStrings__Shop: Host=citus-coordinator;Port=5432;Database=myshop;Username=postgres;Password=postgres
+  Database__MigrateOnStartup: "false"
+  Seed__AdminEmail: admin@myshop.local
+  Seed__AdminPassword: Admin123!
+
+x-web: &web
+  image: myshop-web
+  build:
+    context: .
+    dockerfile: src/MyShop.Web/Dockerfile
+  restart: unless-stopped
+  depends_on:
+    migrator:
+      condition: service_completed_successfully
+
+services:
+  # ── sharded database: 1 coordinator + 2 workers ────────────────────────────
+  citus-worker1:
+    <<: *citus-node
+    environment: *db-env
+    volumes: [citus-worker1:/var/lib/postgresql/data]
+
+  citus-worker2:
+    <<: *citus-node
+    environment: *db-env
+    volumes: [citus-worker2:/var/lib/postgresql/data]
+
+  citus-coordinator:
+    <<: *citus-node
+    environment:
+      <<: *db-env
+      CITUS_COORDINATOR_HOST: citus-coordinator
+      CITUS_WORKERS: citus-worker1 citus-worker2
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - citus-coordinator:/var/lib/postgresql/data
+      - ./deploy/citus/init-coordinator.sh:/docker-entrypoint-initdb.d/010-add-workers.sh:ro
+    depends_on:
+      citus-worker1: { condition: service_healthy }
+      citus-worker2: { condition: service_healthy }
+
+  # ── one-shot: applies EF migrations (incl. Citus distribution) and seeds ───
+  migrator:
+    <<: *web
+    command: ["--migrate"]
+    restart: "no"
+    environment:
+      <<: *web-env
+      INSTANCE_NAME: migrator
+      Database__MigrateAndExit: "true"   # survives IDEs that override `command`
+    depends_on:
+      citus-coordinator: { condition: service_healthy }
+
+  # ── three stateless replicas of the web app ───────────────────────────────
+  web1:
+    <<: *web
+    environment: { <<: *web-env, INSTANCE_NAME: web1 }
+
+  web2:
+    <<: *web
+    environment: { <<: *web-env, INSTANCE_NAME: web2 }
+
+  web3:
+    <<: *web
+    environment: { <<: *web-env, INSTANCE_NAME: web3 }
+
+  # ── load balancer ─────────────────────────────────────────────────────────
+  lb:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports: ["8080:80"]
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [web1, web2, web3]
+
+volumes:
+  citus-coordinator:
+  citus-worker1:
+  citus-worker2:

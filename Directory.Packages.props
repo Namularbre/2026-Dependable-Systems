@@ -1,0 +1,33 @@
+<Project>
+    <PropertyGroup>
+        <EfVersion>10.0.14</EfVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- Application -->
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(EfVersion)"/>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(EfVersion)"/>
+
+        <!-- Persistence -->
+        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3"/>
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfVersion)"/>
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="$(EfVersion)"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="$(EfVersion)"/>
+        <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="$(EfVersion)"/>
+
+        <!-- Web -->
+        <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="$(EfVersion)"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="$(EfVersion)"/>
+        <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(EfVersion)"/>
+
+        <!-- Security: pin patched transitive dependencies -->
+        <PackageVersion Include="System.Security.Cryptography.Xml" Version="$(EfVersion)"/>
+        <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(EfVersion)"/>
+
+        <!-- Tests -->
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0"/>
+        <PackageVersion Include="xunit" Version="2.9.3"/>
+        <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5"/>
+        <PackageVersion Include="Shouldly" Version="4.3.0"/>
+        <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0"/>
+    </ItemGroup>
+</Project>

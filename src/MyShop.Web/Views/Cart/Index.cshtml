@@ -1,0 +1,64 @@
+@model CartDto
+@{
+    ViewData["Title"] = "Your cart";
+}
+
+<h1 class="mb-4">Your cart</h1>
+
+@if (Model.Lines.Count == 0)
+{
+    <p class="text-muted">Your cart is empty. <a asp-controller="Catalog" asp-action="Index">Browse the catalog</a>.</p>
+    return;
+}
+
+<table class="table align-middle">
+    <thead>
+    <tr>
+        <th>Item</th>
+        <th class="text-end">Unit price</th>
+        <th style="width: 12rem">Quantity</th>
+        <th class="text-end">Total</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var line in Model.Lines)
+    {
+        <tr class="@(line.IsAvailable ? "" : "table-warning")">
+            <td>
+                <a asp-controller="Catalog" asp-action="Details" asp-route-id="@line.ItemId">@line.Name</a>
+                @if (!line.IsAvailable)
+                {
+                    <div class="small text-danger">Only @line.Stock left or no longer on sale.</div>
+                }
+            </td>
+            <td class="text-end">@line.UnitPrice.ToString("C")</td>
+            <td>
+                <form asp-action="Update" method="post" class="d-flex gap-2">
+                    <input type="hidden" name="itemId" value="@line.ItemId"/>
+                    <input type="number" name="quantity" value="@line.Quantity" min="1" max="99" class="form-control form-control-sm" aria-label="Quantity"/>
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Update</button>
+                </form>
+            </td>
+            <td class="text-end">@line.Total.ToString("C")</td>
+            <td class="text-end">
+                <form asp-action="Remove" method="post">
+                    <input type="hidden" name="itemId" value="@line.ItemId"/>
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+    <tfoot>
+    <tr>
+        <th colspan="3" class="text-end">Total</th>
+        <th class="text-end">@Model.Total.ToString("C")</th>
+        <th></th>
+    </tr>
+    </tfoot>
+</table>
+
+<form asp-action="Checkout" method="post" class="text-end">
+    <button type="submit" class="btn btn-success btn-lg">Place order</button>
+</form>
