@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+    <File Path="compose.yaml" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="deploy/citus/init-coordinator.sh" />
+    <File Path="deploy/nginx/nginx.conf" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/MyShop.Domain/MyShop.Domain.csproj" />
+    <Project Path="src/MyShop.Application/MyShop.Application.csproj" />
+    <Project Path="src/MyShop.Infrastructure.Persistence/MyShop.Infrastructure.Persistence.csproj" />
+    <Project Path="src/MyShop.Web/MyShop.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MyShop.Domain.Tests/MyShop.Domain.Tests.csproj" />
+    <Project Path="tests/MyShop.Application.Tests/MyShop.Application.Tests.csproj" />
+    <Project Path="tests/MyShop.Infrastructure.Tests/MyShop.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>
