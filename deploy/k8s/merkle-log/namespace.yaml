@@ -1,0 +1,5 @@
+# The logging layer lives in its own namespace, apart from the shop it records.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: merkle-log

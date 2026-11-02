@@ -1,0 +1,9 @@
+# Whole stack: the shop (namespace myshop) and the Merkle logging layer (namespace merkle-log).
+# Deploy with:  kubectl apply -k deploy/k8s
+# Or one layer: kubectl apply -k deploy/k8s/myshop   /   kubectl apply -k deploy/k8s/merkle-log
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - myshop
+  - merkle-log

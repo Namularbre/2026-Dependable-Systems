@@ -1,0 +1,28 @@
+# The Merkle logging layer: 3 replicas, 1 independent auditor, 3 synthetic clients.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: merkle-log
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: merkle-log
+
+resources:
+  - namespace.yaml
+  - config.yaml
+  - replicas.yaml
+  - auditor.yaml
+  - clients.yaml
+
+components:
+  - ../components/partition
+
+# Built locally (see README). Point these at a registry to deploy elsewhere.
+images:
+  - name: merkle-log-replica
+    newTag: dev
+  - name: merkle-auditor
+    newTag: dev
+  - name: merkle-log-client
+    newTag: dev

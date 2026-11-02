@@ -1,0 +1,26 @@
+# Kubernetes version of compose.yaml. Deploy with:  kubectl apply -k deploy/k8s/myshop
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: myshop
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: myshop
+
+resources:
+  - namespace.yaml
+  - secret.yaml
+  - citus.yaml
+  - migrator.yaml
+  - web.yaml
+  - ingress.yaml
+
+# Lets a web pod be put on one side of a simulated partition (see components/partition).
+components:
+  - ../components/partition
+
+# The web image is built locally (see README). Point this at a registry to deploy elsewhere.
+images:
+  - name: myshop-web
+    newTag: dev

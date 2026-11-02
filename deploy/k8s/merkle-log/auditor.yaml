@@ -1,0 +1,84 @@
+# The independent auditor: it never writes to the log. It periodically fetches each
+# replica's signed tree head (STH), checks consistency proofs (the log only grew) and
+# inclusion proofs (sampled entries are present), and records what it saw.
+#
+# It is a StatefulSet with its own volume because the auditor's memory of past STHs is
+# what makes rollback and rewriting detectable: an auditor that forgets after a restart
+# would accept a rewritten log as new.
+#
+# Contract expected from the auditor image: HTTP on port 7100 with GET /health,
+# STH history under $DATA_DIR, replicas to audit in $LOG_REPLICAS.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auditor
+spec:
+  selector:
+    app.kubernetes.io/name: auditor
+  ports:
+    - name: http
+      port: 7100
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: auditor
+spec:
+  serviceName: auditor
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auditor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auditor
+        app.kubernetes.io/component: auditor
+    spec:
+      # Keep the auditor away from the replicas' nodes when possible: a validator that
+      # shares a failure domain with what it validates is less independent.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: log-replica
+      containers:
+        - name: auditor
+          image: merkle-auditor
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 7100
+          envFrom:
+            - configMapRef:
+                name: merkle-config
+          env:
+            - name: DATA_DIR
+              value: /data
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { memory: 128Mi }
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 256Mi

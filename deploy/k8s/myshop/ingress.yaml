@@ -1,0 +1,17 @@
+# Exposes the shop through the cluster's default ingress controller (if it has one).
+# Without an ingress controller, use:  kubectl -n myshop port-forward svc/web 8080:80
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  name: http

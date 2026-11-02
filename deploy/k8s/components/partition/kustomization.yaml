@@ -1,0 +1,6 @@
+# Network-partition support, shared by every namespace that takes part in the experiments.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - networkpolicy.yaml

@@ -1,0 +1,17 @@
+# Single source of truth for the addresses of the log replicas.
+# Every component reads it through envFrom, so adding a 4th replica means editing this
+# list and the StatefulSet's replica count, nothing else.
+#
+# The names are the stable DNS names of the StatefulSet pods (<pod>.<headless service>).
+# They survive restarts and rescheduling, which is what lets a replica find its peers again
+# after a crash and lets a client pick "a replica it can reach" during a partition.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: merkle-config
+data:
+  LOG_REPLICAS: "http://log-replica-0.log-replica.merkle-log.svc.cluster.local:7000,http://log-replica-1.log-replica.merkle-log.svc.cluster.local:7000,http://log-replica-2.log-replica.merkle-log.svc.cluster.local:7000"
+  # How often replicas run anti-entropy (compare Merkle roots) with their peers.
+  ANTI_ENTROPY_INTERVAL: "5s"
+  # How often the auditor fetches and checks the signed tree heads.
+  AUDIT_INTERVAL: "10s"

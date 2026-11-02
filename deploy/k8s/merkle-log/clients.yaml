@@ -1,0 +1,49 @@
+# Synthetic log clients C1..C3 (log-client-0/1/2). They generate entries at a fixed rate
+# and send each one to the first replica of $LOG_REPLICAS that answers, buffering locally
+# while none does. They are what you put on either side of a partition in the experiments,
+# because unlike the shop they do not need the database to keep producing logs.
+#
+# A StatefulSet only for the stable names (log-client-2 is always "C3" in the scenarios);
+# the clients keep no state on disk.
+#
+# Contract expected from the client image: HTTP on port 7200 with GET /health,
+# identity in $CLIENT_ID, rate in $ENTRIES_PER_SECOND.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: log-client
+spec:
+  serviceName: log-client
+  replicas: 3
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: log-client
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: log-client
+        app.kubernetes.io/component: client
+    spec:
+      containers:
+        - name: client
+          image: merkle-log-client
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 7200
+          envFrom:
+            - configMapRef:
+                name: merkle-config
+          env:
+            - name: CLIENT_ID
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: ENTRIES_PER_SECOND
+              value: "10"
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 128Mi }
