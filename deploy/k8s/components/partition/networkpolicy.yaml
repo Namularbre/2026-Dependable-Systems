@@ -1,0 +1,58 @@
+# Simulated network partition.
+#
+# This policy is always installed but does nothing until a pod carries the label
+# merkle-partition=b. A labelled pod can then only talk to other labelled pods (in any
+# namespace), so the cluster splits into two sides:
+#   side A: every pod without the label (the majority)
+#   side B: the labelled pods (e.g. log-replica-2 + log-client-2)
+# Side B's ingress AND egress are both restricted, so the cut is symmetric even though
+# side A has no policy of its own.
+#
+# Start a partition:  kubectl -n merkle-log label pod log-replica-2 log-client-2 merkle-partition=b
+# Heal it:            kubectl -n merkle-log label pod --all merkle-partition-
+# (or use deploy/k8s/chaos/partition.sh and heal.sh)
+#
+# Requires a CNI that enforces NetworkPolicy: kind >= 0.24 (kindnet), minikube with
+# --cni=calico, k3s, most managed clusters. Plain minikube (bridge CNI) ignores it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: partition-b
+spec:
+  podSelector:
+    matchLabels:
+      merkle-partition: b
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              merkle-partition: b
+  egress:
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              merkle-partition: b
+    # DNS keeps working, so peers still resolve and the failure looks like a real
+    # partition (connection timeouts), not a configuration error.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    # The partition cuts the logging network, not the shop's database: a web pod put on
+    # side B keeps serving the shop and only loses the replicas of side A.
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: citus-coordinator
+      ports:
+        - { protocol: TCP, port: 5432 }

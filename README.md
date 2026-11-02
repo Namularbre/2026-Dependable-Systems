@@ -73,6 +73,14 @@ Only one container applies migrations, so the replicas never race each other.
 
 > **Starting it from Rider:** Rider's Docker "fast mode" adds `.idea/.../compose.generated.override.yml`, which replaces each container's command. The migrator is therefore switched on by an environment variable rather than by the `--migrate` argument. If web1–3 stay in `Created`, check the migrator: `docker compose logs migrator` should end with `Seeded … demo item(s)` and the container should exit with code 0. It must never show `Now listening on`.
 
+### On Kubernetes
+
+The same stack, plus the Merkle logging layer (3 log replicas, an independent auditor, synthetic clients) and failure-injection scripts, is in [`deploy/k8s`](deploy/k8s/README.md):
+
+```bash
+kubectl apply -k deploy/k8s
+```
+
 ---
 
 ## Running locally (for development / debugging)
